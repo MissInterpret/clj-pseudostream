@@ -2,28 +2,38 @@
   "Internal namespace providing affordances that return file data in 
    a format that is compatible with ring and pedestal requests."
   (:require [me.raynes.fs :as fs]
+            [ring.util.codec :as codec]
+            [clj-pseudostream.route :as r]
             [clj-pseudostream.file.core :as f]))
 
-(defn contained? [path root]
-  (let [mapped (map #(fs/child-of? % path) root)]
-    (every? true? mapped)))
+(defn allowed? [request-route matches-fn route]
+  (let [file (file request-route route)]
+     (and
+       (matches-fn request-route route)
+       (fs/exists? file))))
+                        
+(defn format-handler [request config]
+  "Returns the format handler that best matches the route of the 
+   request. The most specific route is returned if there is more 
+   than one route that matches the request route.
+   
+   Additionally, if a handler that matches the format of the file
+   exists it is preferred."
+ (let [allowed-fn (:allowed-fn config)
+       matches-fn (:matches-fn config)
+       request-route (r/request-route request)
+       route (last (filter 
+                      true? 
+                      (map 
+                        #(allowed-fn request-route matches-fn %)
+                        (:routes config))))
+       handlers (:handlers route)
+       ext (r/extension request-route)
+       kw-ext (keyword ext)]
+  (if (contains? handlers kw-ext)
+    (get handlers kw-ext)
+    (:default handlers))))
 
-(defn matches? [path {:keys [matches root]}]
-  ; Does the path match the regex?
-  (let [contained? (contained? path root)
-        match? ()]
-    (and contained? match?)))
-
-(defn ext? [path exts]
-  (contains? exts (fs/extension path)))
-
-(defn allowed? [request config]
-  "Does the path of the request match the regex expression and exist?"
-  (let [path (f/path request)]
-    (and (matches? request config)
-         (ext? path (:extensions config))
-         (fs/exists? path))))
-
-(defn stream [request {:keys [range? input]}]
+(defn stream [request {:keys [range? input] :as handler}]
   "Handles the progressive download protocol for this file request")
 

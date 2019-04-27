@@ -1,6 +1,6 @@
 (ns clj-pseudostream.ring.middleware.core
-  (:require [clj-pseudostream.file.ring :refer [handle]]
-            [clj-pseudostream.core :refer [stream]])
+  (:require [clj-pseudostream.core :refer [stream format-handler]]
+            [clj-pseudostream.matches :refer []])
   (:import java.io.File))
    
 (defn wrap-files [app config]
@@ -8,7 +8,7 @@
    progressive download, otherwise proxing the request to the wrapped app."
   (let [allowed? (:allowed-fn config)]
     (fn [request]
-      (if (allowed? request config)
-        (let [handle (handle request)]
-          (stream request handle))
-        (app request)))))
+      (let [h (format-handler request config)]
+        (if (not-nil? h)
+          (stream request h)
+          (app request))))))
