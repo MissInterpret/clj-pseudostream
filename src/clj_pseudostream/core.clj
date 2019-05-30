@@ -1,39 +1,39 @@
 (ns clj-pseudostream.core
   "Internal namespace providing affordances that return file data in 
    a format that is compatible with ring and pedestal requests."
-  (:require [me.raynes.fs :as fs]
-            [ring.util.codec :as codec]
-            [clj-pseudostream.route :as r]
-            [clj-pseudostream.file.core :as f]))
-
-(defn allowed? [request-route matches-fn route]
-  (let [file (file request-route route)]
-     (and
-       (matches-fn request-route route)
-       (fs/exists? file))))
+  (:require [clj-pseudostream.request :as req]
+            [clj-pseudostream.bind :as bind]))
                         
-(defn format-handler [request config]
-  "Returns the format handler that best matches the route of the 
-   request. The most specific route is returned if there is more 
-   than one route that matches the request route.
+(defn stream-input [config request]
+  "Returns the input handle that best matches the route of the 
+   request.
    
-   Additionally, if a handler that matches the format of the file
-   exists it is preferred."
+    Once an allowed route is determined,
+    the format handler that best matches the extension
+    of the requested file is used to load it.
+    
+    If the route is not matched then nil is returned."
  (let [allowed-fn (:allowed-fn config)
-       matches-fn (:matches-fn config)
-       request-route (r/request-route request)
        route (last (filter 
                       true? 
                       (map 
-                        #(allowed-fn request-route matches-fn %)
-                        (:routes config))))
-       handlers (:handlers route)
-       ext (r/extension request-route)
-       kw-ext (keyword ext)]
-  (if (contains? handlers kw-ext)
-    (get handlers kw-ext)
-    (:default handlers))))
+                        #(allowed-fn request %)
+                        (:routes config))))]
+   (if (nil? route)  
+     nil
+     (let [ext (keyword (req/extension request))
+           sources (:sources config)
+           source-ctr (if (contains? sources ext)
+                        (get sources ext)
+                        (:default sources))
+           src (source-ctr request route)
+           range? (req/range request route src)]
+       {:range? range?
+        :source src}))))
 
-(defn stream [request {:keys [range? input] :as handler}]
+(defn stream [request {:keys [range? target] :as handler}]
   "Handles the progressive download protocol for this file request")
+; This is mostly blurting back the right headers to indicate support
+; for the (psuedo) protocol...
+  
 

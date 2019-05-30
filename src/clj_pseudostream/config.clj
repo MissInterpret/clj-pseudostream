@@ -1,37 +1,35 @@
 (ns clj-pseudostream.config
-  (:require [clj-pseudostream.core :refer [allowed?]]
-            [clj-pseudostream.matches :as matches]
-            [clj-pseudostream.route :as route]
-            [clj-pseudostream.file.core :as f]
-            [clj-pseudostream.file.ring :as r]))
-            
-;; Server Types ---------------------------------
-;;
-(def ring :ring)
-(def pedestal :pedestal)
-         
-(defn new-routes 
-  ([server root]
-   [(route/new server "/" root)])
-  ([server route root]
-   [(route/new server route root)])
-  ([server route root & mappings]
-   (if-not (and (some? mappings) (even? (count mappings)))
-     (throw (IllegalArgumentException. "mappings does not contain route-root pairs.")))
-   (let [path-pairs (if (some? mappings)
-                      (into [route root] mappings)
-                      [route root])]
-     (loop [pairs path-pairs
-            result []]
-       (if (empty? pairs)
-         result
-         (let [route (first pairs)
-               root (next pairs) 
-               path (r/route server route root)]
-           (recur (drop 2 pairs) (conj result path))))))))
+  (:require [clj-pseudostream.defaults :as defaults]
+            [clj-pseudostream.route :as route]))
 
-(defn new-config [routes server & {:keys [matches-fn* allowed-fn*] :as opts}]
-  {:routes routes
-   :matches-fn (if (some? matches-fn) matches-fn* (matches/new))
-   :allowed-fn (if (some? allowed-fn) allowed-fn* allowed?)})
+(defn routes [mappings]
+ (if-not (and (some? mappings) (even? (count mappings)))
+   (throw (IllegalArgumentException. "mappings does not contain route-root pairs.")))
+ (loop [pairs mappings 
+        result []]
+   (if (empty? pairs)
+     result
+     (let [base (first pairs)
+           fs (next pairs) 
+           data-uri-fn (defaults/new-path fs)
+           route (route/new base data-uri-fn)]
+       (recur (drop 2 pairs) (conj result route))))))
 
+(defn handlers [server]
+  {:default (case server
+              :ring 'clj-pseudostream.file.ring
+              :pedestal 'clj-pseudostream.file.core)})
+
+(defn new-config 
+  [server routes & {:keys [regex allowed-fn] :as opts}]
+  (let [rx (if (some? regex)
+              regex
+              defaults/regex)
+        allowed (if (some? allowed-fn) 
+                  allowed-fn
+                  (defaults/new-allowed rx))]
+   {:allowed-fn allowed 
+    :routes (new-routes routes)
+    :
+    :sources (new-handlers server)})) 
+     
