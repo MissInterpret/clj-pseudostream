@@ -5,12 +5,12 @@
 (defn routes [mappings]
  (if-not (and (some? mappings) (even? (count mappings)))
    (throw (IllegalArgumentException. "mappings does not contain route-root pairs.")))
- (loop [pairs mappings 
+ (loop [pairs mappings
         result []]
    (if (empty? pairs)
      result
      (let [base (first pairs)
-           fs (next pairs) 
+           fs (next pairs)
            data-uri-fn (defaults/new-path fs)
            route (route/new base data-uri-fn)]
        (recur (drop 2 pairs) (conj result route))))))
@@ -20,16 +20,14 @@
               :ring 'clj-pseudostream.file.ring
               :pedestal 'clj-pseudostream.file.core)})
 
-(defn new-config 
+(defn new-config
   [server routes & {:keys [regex allowed-fn] :as opts}]
   (let [rx (if (some? regex)
               regex
               defaults/regex)
-        allowed (if (some? allowed-fn) 
+        allowed (if (some? allowed-fn)
                   allowed-fn
                   (defaults/new-allowed rx))]
-   {:allowed-fn allowed 
+   {:allowed-fn allowed
     :routes (new-routes routes)
-    :
-    :sources (new-handlers server)})) 
-     
+    :sources (new-handlers server)}))

@@ -1,15 +1,15 @@
 (ns clj-pseudostream.request
-  (:require [clj-pseudostream.bind :as bind]))
+  (:require [clj-pseudostream.media.protocol :as p]))
 
-; Ensure this doesn't include the domain 
+; Ensure this doesn't include the domain
 ; Careful to make this compatible with both ring and pedestal
 ;
 (defn route [request])
 
 (defn sub-route [request route]
-  "Returns the sub-route from the request if it 
+  "Returns the sub-route from the request if it
    starts with the base route.
-   
+
    Returns nil if the request is not a sub-route
    of the route."
   (let [request-route (route request)
@@ -31,5 +31,5 @@
   ; Always return bytes, use fn to do timebase translation
   (let [start ()
         end ()]
-    {:start  (p/time-to-byte source start) 
+    {:start  (p/time-to-byte source start)
      :end (p/time-to-byte source end)}))
