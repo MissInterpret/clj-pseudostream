@@ -1,36 +1,46 @@
 (ns clj-pseudostream.core
   "Internal namespace providing affordances that return file data in
    a format that is compatible with ring and pedestal requests."
-  (:require [clj-pseudostream.request :as req]))
+  (:require [cognitect.anomalies :as anomalies]
+            [clj-pseudostream.utils :as u]
+            [clj-pseudostream.media.protocol :as p]
+            [clj-pseudostream.request :as req]))
 
-(defn stream-input [config request]
-  "Returns the input handle that best matches the route of the
-   request.
+(defn didnt-match? [stream-response]
+  (and (contains? stream-response ::from)
+       (not (get-in stream-resp [::access :matches?]))))
 
-    Once an allowed route is determined,
-    the format handler that best matches the extension
-    of the requested file is used to load it.
+(defn error? [stream-response]
+  (and (u/anomaly? stream-response)
+       (not (contains? stream-response ::from))))
 
-    If the route is not matched then nil is returned."
- (let [allowed-fn (:allowed-fn config)
-       route (last (filter
-                      true?
-                      (map
-                        #(allowed-fn request %)
-                        (:routes config))))]
-   (if (nil? route)
-     nil
-     (let [ext (keyword (req/extension request))
-           sources (:sources config)
-           source-ctr (if (contains? sources ext)
-                        (get sources ext)
-                        (:default sources))
-           src (source-ctr request route)
-           range? (req/range request route src)]
-       {:range? range?
-        :source src}))))
 
-(defn stream [request {:keys [range? target] :as handler}]
-  "Handles the progressive download protocol for this file request")
-; This is mostly blurting back the right headers to indicate support
-; for the (psuedo) protocol...
+(defn initial-response [source request])
+
+
+(defn response [{:keys [access-fn source-fn] :as request}]
+  "Handles range request or returns an anomaly when:
+
+   o Request is not allowed
+   o The source is unable to be loaded
+
+   The following keys are required:
+
+   :access-fn  - Access control
+   :source-fn  - Provides a MediaSource appropriate for this request"
+  (let [access (access-fn request)]
+    (cond
+      (u/anomaly? access)            access
+
+      (and (:matches? access)
+           (not (:allowed? access))) {::anomalies/category ::anomalies/forbidden
+                                      ::anomalies/message "Request Unauthorized"
+                                      ::from ::response
+                                      ::access access}
+
+      (and (:matches? access)
+           (:allowed? access))       (let [source (source-fn request)]
+                                       (cond
+                                         (u/anomaly? source)  source
+                                         (req/range? request) (p/input-stream source request)
+                                         :else (initial-response source request))))))

@@ -2,5 +2,5 @@
 
 (defprotocol MediaSource
   (duration [this])
-  (input-stream [this])
+  (input-stream [this request])
   (time-to-byte [this time]))

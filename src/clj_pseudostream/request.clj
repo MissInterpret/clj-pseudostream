@@ -2,7 +2,7 @@
   (:require [clj-pseudostream.media.protocol :as p]))
 
 ; Ensure this doesn't include the domain
-; Careful to make this compatible with both ring and pedestal
+; Careful to make this compatible with ring and pedestal
 ;
 (defn route [request])
 
@@ -24,7 +24,9 @@
 (defn extension [request]
   (let [filename (filename request)]
     ; pull off the file extension
-   (clojure.string/lower-case)))
+    (clojure.string/lower-case)))
+
+(defn range? [request])
 
 (defn range [request route source]
   "Returns and range information found either in headers or in params"
