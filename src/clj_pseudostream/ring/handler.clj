@@ -1,11 +1,12 @@
 (ns clj-pseudostream.ring.handler
   (:require [clj-pseudostream.utils :as u]
-            [clj-pseudostream.core :as stream]
+            [clj-pseudostream.handler :as stream]
+            [clj-pseudostream..anomalies :as anomalies]
             [ring.util.http-response :as r]))
 
-(defn stream [{:keys [access-fn source-fn] :as request}]
+(defn stream [{:keys [access source] :as request}]
   (let [resp (stream/response request)]
     (cond
-      (error? resp) (r/error  (with-out-str (clojure.pprint/pprint resp)))
-      (contains? resp ::stream/from) (r/unauthorized)
+      (anomolies/anomoly? resp)
+      (r/error  (with-out-str (clojure.pprint/pprint resp)))
       :else resp)))

@@ -1,9 +1,13 @@
-target-dir             := target
+VERSION:=$(shell git rev-parse --short=10 HEAD)
 
-.PHONY: aot
+target:
+	mkdir -p target
 
-aot:
-	mkdir -p $(target-dir) && mkdir -p classes
-	clojure -e "(compile,'clj-psuedostream.compile)"
-	if [ -d $(target-dir)/classes ]; then rm -r $(target-dir)/classes; fi
-	mv classes $(target-dir)
+
+target/classes/namespaces.class: deps.edn src/**/* target
+	clojure -A:build -m package
+
+build: target/classes/namespaces.class
+
+clean:
+	rm -rf target

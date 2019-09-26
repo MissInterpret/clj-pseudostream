@@ -1,7 +1,9 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.0"}
         me.raynes/fs {:mvn/version "1.4.6"}
-        ring/ring-core {:mvn/version "1.7.1"}}
+        ring/ring-core {:mvn/version "1.7.1"}
+        com.cognitect/anomalies {:mvn/version "0.1.12"}
+        slingshot/slingshot {:mvn/version "0.12.2"}}
  :aliases {:dev
            {:extra-paths ["dev" "test" "test-resources"]}
            :test
@@ -11,4 +13,10 @@
                            :sha     "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
                           cheshire {:mvn/version "5.8.1"}}
             :main-opts   ["-m" "cognitect.test-runner" "-e" ":integration"]}
-            }}
+           :build
+           {:extra-paths ["build"]
+            :extra-deps
+            {badigeon/badigeon
+             {:git/url "https://github.com/EwenG/badigeon.git"
+              :sha "e7f62a60d8e890fc84a47bcfdd59137e11ff1c95"
+              :tag "0.0.7"}}}}}

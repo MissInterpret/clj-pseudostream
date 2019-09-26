@@ -1,20 +1,20 @@
 (ns clj-pseudostream.media.ring-adapter
   "Provides efficient access to file resources compatible with ring requests."
-  (:require [clj-pseudostream.media.file :as f]
-            [clj-pseudostream.request :as req]
-            [clojure.java.io :as io]
-            [ring.util.io :as ring-io]
+  (:require
+
+               [ring.util.io :as ring-io]
             [clj-pseudostream.media.protocol :as p]))
 
 
 (defrecord RingFileSource [source]
+ 
   p/MediaSource
   (duration [this])
   (input-stream [this])
   (time-to-byte [this time]))
 
 
-
+(defn new-source [])
 
 #_(defn input-stream [request route]
   "Returns a map containing:
