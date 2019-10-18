@@ -2,7 +2,7 @@
 
 (defprotocol MediaSource
   (duration [this])
-  (input-stream [this request])
+  (input-stream [this access request])
   (time-to-byte [this time]))
 
 (defn null-media-source []

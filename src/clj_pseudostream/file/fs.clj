@@ -4,7 +4,8 @@
             [ring.util.request :as req]
             [clj-pseudostream.anomolies :as anomolies]))
 
-(defn file-anomoly
+;; TODO: Convert this to throw+ version
+(defn anomoly
   ([message route & throwable]
    (file-anomoly message route nil throwable))
   ([message {:keys [fs-root req-segment] :as route} file-path & throwable]
@@ -13,20 +14,21 @@
              [::anomolies/data :file-info]
              {:fs-root fs-root
               :req-segment req-segment})
-     file-path (assoc-in [::anomolies/data :file-into :path] file-path))))
+     file-path (assoc-in [::anomolies/data :file-info :path] file-path))))
 
 
 ;; Path ----------------------------------------------------
 ;;
 
-(defn path [{:keys [fs-root req-segment] :as route} request]
-  (let [url (req/request-url request)
-        idx (s/index-of url req-segment)]
+(defn file-path
+  "Constructs an absolute file path from the route using
+   the `fs-root` and the `req-segment`."
+  [{:keys [fs-root req-segment] :as route} req-url]
+  (let [idx (s/index-of req-url req-segment)]
     (if (> idx 0)
-      (->> (subs url idx)
-           (str fs-root "/") ; / or not?
-           )
-      (file-anomoly ::cant-find-segment route))))
+      (->> (subs req-url idx)
+           (str fs-root "/"))
+      (anomoly ::cant-find-segment route))))
 
 
 
@@ -34,14 +36,12 @@
 ;;
 
 
-(defn file [route request]
-  "Returns a java.io.File by translating the fs-root and req-segment
-   into a file path or an anomoly."
-  (try
-    (let [path (file-path route request)
-          file (fs/file file-path)]
-      (if (fs/exists? file)
-        file
-        (file-anomoly ::does-not-exist route file-path)))
-    (catch Throwable throwable
-      (file-anomoly ::read-exception route file-route throwable))))
+(defn file
+  "Returns a java.io.File by translating the `route` using the `request`."
+  [route req-url]
+  (let [path (file-path route request)
+        file (fs/file file-path)]
+    (cond
+      (not (fs/exists? file)) (anomoly ::does-not-exist route file-path)
+      (not (.canRead file))   (anomoly ::unreadable route file-path)
+      :else file)))

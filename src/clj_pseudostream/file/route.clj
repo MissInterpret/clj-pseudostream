@@ -17,30 +17,19 @@
 ;; Parsing -----------------------------------------------------
 ;;
 
-(defn parse-anomoly [message & data]
+(defn anomoly [message & data] ;; TODO: Convert to throw+
   (anomolies/create ::route ::anomolies/unhandled message data))
 
-(defn parse-route [stream-routes request]
+
+(defn parse-route
   "Creates a route from the incoming request using the stream-routes mapping."
+  [stream-routes request]
   (let [url (req/request-url request)
         route (filter
                 (fn [route]
                   (s/starts-with? url (::req-segment route)))
                 stream-routes)]
     (cond
-      (= 0 (count route)) (parse-anomoly ::route-not-found)
-      (> 1 (count route)) (parse-anomoly ::too-many-routes route)
+      (= 0 (count route)) (anomoly ::route-not-found)
+      (> 1 (count route)) (anomoly ::too-many-routes route)
       :else (first route))))
-
-
-
-;; Access Value ------------------------------------------------
-;;
-
-(defn access-value [route request]
-  "Returns an clj-pseudostream/access data structure when the file exists and is readable or an anomoly.
-
-   NOTE: handle? is always true."
-  (let [file (file route request)
-        readable? (.canRead file)]
-    (access/new-access true readable?)))

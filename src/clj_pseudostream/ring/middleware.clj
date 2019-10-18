@@ -9,5 +9,6 @@
     (let [resp (stream/handle (merge request config))]
       (cond
         (stream/unhandled? resp)  (app request)
+        ;; Forbidden vs error here
         (anomolies/anomoly? resp) (r/error (with-out-str (clojure.pprint/pprint resp)))
         :else                     resp))))

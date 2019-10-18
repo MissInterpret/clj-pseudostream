@@ -13,6 +13,6 @@
 ;;
 
 ; The MediaSource protocol
-(s/def ::protocol/media-source
+(s/def ::protocol/source
   (s/spec (partial satisfies? p/MediaSource)
           :gen #(gen/return (p/null-media-source))))

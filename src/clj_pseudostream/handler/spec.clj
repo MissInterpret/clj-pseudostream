@@ -1,9 +1,9 @@
 (ns clj-pseudostream.handler.spec
   (:require [clojure.spec.alpha :as s]
-            [clj-pseudostream.anomalies.spec :as anomalies]))
+            [clj-pseudostream.anomalies.spec :as anomalies]
+            [clj-psuedostream.access.spec :as access]
+            [clj-pseudostream.media-source.protocol.spec :as media]))
 
-(create-ns 'clj-pseudostream.handler)
-(alias 'handler 'clj-pseudostream.handler)
 
 ;; Access Control --------------------------------------------
 ;;
@@ -17,36 +17,13 @@
 (s/def ::handler/access-fn
   (s/fspec
     :args map?
-    :ret (s/or ::handler/anomoly ::handler/access-value)))
-
-
-;; Media Source ----------------------------------------------
-;;
-;; Once a request is being handled a MediaSource is responsable
-;; for returning the media's data and metadata used in the response.
-;;
-
-(create-ns 'clj-pseudostream.media-source.protocol)
-(alias 'protocol 'clj-pseudostream.media-source.protocol)
-
-; Returns an anomoly or an implementation of MediaSource
-(s/def ::handler/source-fn
-  (s/fspec
-    :args map?
-    :ret (s/or ::handler/anomoly ::protocol/media-source)))
+    :ret (s/or ::anomalies/anomoly ::access/access)))
 
 
 ;; Handler ------------------------------------------------------
 ;;
 
-(s/def ::handler/access
-  (s/fspec
-    :args map?
-    :ret (s/or ::anomolies/anomoly ::handler/access-fn)))
+(create-ns 'clj-pseudostream.handler)
+(alias 'handler 'clj-pseudostream.handler)
 
-(s/def ::handler/source
-  (s/fspec
-    :args map?
-    :ret (s/or ::anomolies/anomoly ::handler/source-fn)))
-
-(s/def ::handler/request :req [::handler/access ::handler/source])
+(s/def ::handler/request :req [::handler/access-fn])
