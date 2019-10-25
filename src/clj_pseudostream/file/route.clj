@@ -3,9 +3,8 @@
    and a file on a presumed file system."
   (:require [clojure.string :as s]
             [ring.util.request :as req]
-            [clj-pseudostream.fs :as fs]
-            [clj-pseudostream.access :as access]
-            [clj-pseudostream.anomolies :as anomolies]))
+            ;[clj-pseudostream.anomolies :as anomolies]
+            ))
 
 
 (defn new-route [fs-root req-segment regex]
@@ -14,22 +13,19 @@
    ::regex regex})
 
 
-;; Parsing -----------------------------------------------------
-;;
+(defn media-extension [rel-path]
+  (let [idx (s/last-index-of rel-path ".")]
+    (if (nil? idx)
+      nil
+      (keyword (subs rel-path (+ idx 1))))))
 
-(defn anomoly [message & data] ;; TODO: Convert to throw+
-  (anomolies/create ::route ::anomolies/unhandled message data))
 
-
-(defn parse-route
-  "Creates a route from the incoming request using the stream-routes mapping."
-  [stream-routes request]
-  (let [url (req/request-url request)
-        route (filter
+(defn find-route
+  "Creates a route from the incoming request using the stream-routes
+  mapping. If multiple routes are matched the last one in returned."
+  [stream-routes rel-path]
+  (let [route (filter
                 (fn [route]
-                  (s/starts-with? url (::req-segment route)))
+                  (s/starts-with? rel-path (::req-segment route)))
                 stream-routes)]
-    (cond
-      (= 0 (count route)) (anomoly ::route-not-found)
-      (> 1 (count route)) (anomoly ::too-many-routes route)
-      :else (first route))))
+    (last route)))

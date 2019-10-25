@@ -1,8 +1,7 @@
 (ns clj-pseudostream.handler.spec
   (:require [clojure.spec.alpha :as s]
-            [clj-pseudostream.anomalies.spec :as anomalies]
             [clj-psuedostream.access.spec :as access]
-            [clj-pseudostream.media-source.protocol.spec :as media]))
+            [clj-pseudostream.media-source.spec :as media]))
 
 
 ;; Access Control --------------------------------------------
@@ -17,7 +16,7 @@
 (s/def ::handler/access-fn
   (s/fspec
     :args map?
-    :ret (s/or ::anomalies/anomoly ::access/access)))
+    :ret (s/or keyword? map?)))
 
 
 ;; Handler ------------------------------------------------------

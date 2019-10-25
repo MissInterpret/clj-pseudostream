@@ -1,4 +1,4 @@
-(ns clj-pseudostream.media.protocol)
+(ns clj-pseudostream.media-source)
 
 (defprotocol MediaSource
   (duration [this])

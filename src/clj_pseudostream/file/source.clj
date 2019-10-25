@@ -1,23 +1,25 @@
 (ns clj-pseudostream.file.source
-  (:require [clj-pseudostream.file.route :as route]
-            [clj-pseudostream.anomolies :as anomolies]
-            [me.raynes.fs :as fs])
+  (:require [clj-pseudostream.error :as err]
+            [clj-pseudostream.file.route :as route]
+            [clj-pseudostream.media-source :as media])
   (:import [java.io RandomAccessFile InputStream OutputStream]))
 
 
-(defn anomoly [from message file range & throwable]
-  (anomolies/throw from message {:file file :range range} throwable))
+(defn error [from message file range]
+  (err/throw message from {:file file :range range}))
 
 
 (defn random-access-file [file {:keys [playhead duration] :as range}]
   (let [raf (RandomAccessFile. path "r")
         length (.length raf)]
     (cond
-      (> duration length) (anomoly ::raf ::duration-exceeds-file-length file range)
-      (< playhead 0)      (anomoly ::raf ::playhead-negative file range)
+      (> duration length) (error ::raf ::duration-exceeds-file-length file range)
+      (< playhead 0)      (error ::raf ::playhead-negative file range)
       :else (try
               (.seek playhead)
-              (catch Throwable t (anomoly raf ::seek-failed file range t))))))
+              (catch Exception e
+                (let [msg {::seek-failed (.getMessage e)}]
+                  (error raf msg file range t)))))))
 
 
 (defrecord FileSource
@@ -26,18 +28,17 @@
 
    i.e. duration is the total bytes, etc."
   [file]
-  p/MediaSource
+  media/MediaSource
 
   (duration [this]
-    (fs/size (.getPath file)))
+    (.length file))
 
   ; InputStream interface:
   ;
   ; https://docs.oracle.com/javase/9/docs/api/java/io/InputStream.html
   ;
   (input-stream [this {:keys [playhead duration] :as range}]
-    (let [path (.getPath file)
-          size (fs/size path)
+    (let [size (.length file)
           range-length (+ playhead duration)]
       (if (> range-length size)
 

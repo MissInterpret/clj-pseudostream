@@ -1,21 +1,23 @@
 (ns clj-pseudostream.file.access
-  (:require [clj-pseudostream.anomolies :as anomolies]
-            [clj-pseudostream.access.protocol :as p]
+  (:require [ring.util.request :as req]
+            [clj-pseudostream.anomolies :as anomolies]
+            [clj-pseudostream.access.access :as access]
             [clj-pseudostream.file.fs]
-            [clj-pseudostream.file.route :as route]
-            [clj-pseudostream.file.source :as src]))
+            [clj-pseudostream.file.route :as route]))
 
 
 (defrecord RouteAccess
-  [route req-url]
-  p/Access
+  [rel-path route source-new]
+  access/Access
   (ignore? [this]
-    (nil? (re-matches (:regex route) req-url)))
+    (or
+      (nil? source-new)
+      (nil? route)
+      (nil? (re-matches (::route/regex route) rel-path))))
   (forbid? [this]
     false)
   (media [this]
-    (src/new-media-source (fs/file route req-url))))
-
+    (source-new (fs/file route rel-path))))
 
 (defn new-access
   "Implements the :clj-pseudostream.handler/access-fn spec
@@ -23,12 +25,15 @@
    file on the local file system.
 
    `stream-routes` is a set of routes that conform to the
-  :clj-pseudostream.file.access.spec/stream-routes spec."
-  [stream-routes]
-  {:pre (s/valid? ::stream-routes stream-routes)}
-  (fn [request]
-    (let [route (route/parse-route stream-routes request)]
-      (cond
-        (anomalies/anomaly? route) route
-        :else
-        (RouteAccess. route (req/request-url request))))))
+   :clj-pseudostream.file.access.spec/stream-routes spec.
+
+  `media-sources` is a map of file extensions by keyword
+  (i.e. `{:mp4 ...`) with values that are constructors for
+  MediaSource's."
+  [stream-routes media-sources]
+  (let [default-source (:default media-sources)]
+    (fn [request]
+      (let [rel-path (req/path-info request)
+            route (route/find-route stream-routes rel-path)
+            ext (route/media-extension request)]
+        (RouteAccess. rel-path route (get media-sources ext default-source))))))

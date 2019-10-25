@@ -1,4 +1,4 @@
-(ns clj-pseudostream.access.protocol)
+(ns clj-pseudostream.access)
 
 (defprotocol Access
   (ignore? [this])

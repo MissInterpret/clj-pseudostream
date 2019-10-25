@@ -1,9 +1,8 @@
 (ns clj-pseudostream.handler
   "Internal namespace providing affordances that return file data in
    a format that is compatible with ring requests."
-  (:require [clj-pseudostream..anomalies :as anomalies]
-            [clj-pseudostream.access.protocol :as access]
-            [clj-pseudostream.handler.spec]
+  (:require [ring.util.response :as resp]
+            [clj-pseudostream.access :as access]
             ))
 
 ;; Range Response Implementation -----------------------------------
@@ -26,16 +25,12 @@
 ;; Request Handler --------------------------------------------------
 ;;
 
-(defn unhandled? [request]
-  (and (anomolies/anomaly? request)
-       (= (::anomolies/category request) ::anomolies/unhandled)))
 
 (defn handle
-  "Handles range request or returns an anomaly when:
+  "Handles range request or returns:
 
-   o Request is not handled
-   o Request is not allowed
-   o error
+  :clj-pseudostream.handler/unhandled
+  :clj-psuedostream.handler/forbidden
 
    The following keys are required:
 
@@ -43,9 +38,8 @@
   [{:keys [access-fn] :as request}]
   (let [a (access-fn request)]
     (cond
-      (anomolies/anomaly? a) a
-      (access/ignore? a)     (anomolies/create ::handler ::anomolies/unhandled)
-      (access/forbid? a)     (anomolies/create ::handler ::anomolies/forbidden)
+      (access/ignore? a) ::unhandled
+      (access/forbid? a) ::forbidden
       :else
       (if (range? request)
         (stream-response a request)
