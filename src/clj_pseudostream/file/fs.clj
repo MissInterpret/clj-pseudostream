@@ -13,9 +13,9 @@
 
 (defn file
   "Returns a java.io.File by translating the `route` using the `request`."
-  [{:keys [fs-root req-segment]} req-url]
+  [{:keys [fs-root req-segment] :as route} req-url]
   (let [path (str fs-root (subs req-url (count req-segment)))
-        file (io/as-file file-path)]
+        file (io/as-file path)]
     (cond
       (not (.exists file))  (error ::does-not-exist route file)
       (not (.canRead file)) (error ::unreadable route file)

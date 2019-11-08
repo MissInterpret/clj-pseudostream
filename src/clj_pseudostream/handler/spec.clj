@@ -16,7 +16,7 @@
 (s/def ::handler/access-fn
   (s/fspec
     :args map?
-    :ret (s/or keyword? map?)))
+    :ret (s/or keyword? access/access)))
 
 
 ;; Handler ------------------------------------------------------
@@ -25,4 +25,4 @@
 (create-ns 'clj-pseudostream.handler)
 (alias 'handler 'clj-pseudostream.handler)
 
-(s/def ::handler/request :req [::handler/access-fn])
+(s/def ::handler/request (s/keys :req [::handler/access-fn]))

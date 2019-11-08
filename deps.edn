@@ -1,6 +1,5 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure     {:mvn/version "1.10.0"}
-        me.raynes/fs            {:mvn/version "1.4.6"}
         ring/ring-core          {:mvn/version "1.7.1"}
         com.cognitect/anomalies {:mvn/version "0.1.12"}
         slingshot/slingshot     {:mvn/version "0.12.2"}
@@ -15,7 +14,8 @@
             :extra-deps  {com.cognitect/test-runner
                           {:git/url "https://github.com/cognitect-labs/test-runner.git"
                            :sha     "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
-                          cheshire {:mvn/version "5.8.1"}}
+                          me.raynes/fs {:mvn/version "1.4.6"}
+                          }
             :main-opts   ["-m" "cognitect.test-runner"]}
            :build
            {:extra-paths ["build"]
