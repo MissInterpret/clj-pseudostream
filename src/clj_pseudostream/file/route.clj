@@ -5,9 +5,9 @@
             ))
 
 
-(defn new-route [fs-root req-segment]
-  {::fs-root fs-root
-   ::segment-regex req-segment})
+(defn new-route [root regex]
+  {::fs-root root
+   ::segment-regex regex})
 
 
 (defn media-extension [rel-path]
@@ -21,8 +21,10 @@
   "Returns the appropriate route for the incoming request using the stream-routes
   mapping."
   [stream-routes rel-path]
+  ;; Wouldn't loop-recur that short-circuits on first match
+  ;; be better?
   (let [route (filter
                 (fn [route]
-                  (re-find (::segment-regex route) rel-path))
+                  (not (nil? (re-find (::segment-regex route) rel-path))))
                 stream-routes)]
     (last route)))

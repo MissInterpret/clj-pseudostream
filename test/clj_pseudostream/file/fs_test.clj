@@ -6,12 +6,10 @@
             [me.raynes.fs :as rfs]))
 
 
-(def segment "/some/relative/path/")
-
-(def valid-file "video.mp4")
+(def segment "/")
 
 (def route-map {:fs-root (str (.getAbsolutePath (io/file "")) "/test/resources/")
-                :req-segment segment})
+})
 
 (deftest load-video-file
   (testing "missing file"
@@ -22,15 +20,17 @@
       (catch Object _
         (is false))))
   (testing "can't read"
-    (try+
-      (let [path ()])
-      (rfs/chmod )
-      (fs/file route-map (str segment "unreadable.mp4"))
-      (is false)
-      (catch [:error ::fs/unreadable] info
-        (is true))
-      (catch Object _
-        (is false))))
+    (let [path (io/as-file (str (:fs-root route-map) "unreadable.mp4"))]
+      (try+
+        (rfs/chmod "-r" path)
+        (fs/file route-map (str segment "unreadable.mp4"))
+        (is false)
+        (catch [:error ::fs/unreadable] info
+          (rfs/chmod "+r" path)
+          (is true))
+        (catch Object _
+          (rfs/chmod "+r" path)
+          (is false)))))
   (testing "loaded"
     (let [f (fs/file route-map (str segment "video.mp4"))]
       (is (instance? java.io.File f)))))

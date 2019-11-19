@@ -12,8 +12,7 @@
   (ignore? [this]
     (or
       (nil? source-new)
-      (nil? route)
-      (nil? (re-matches (::route/regex route) rel-path))))
+      (nil? route)))
   (forbid? [this]
     false)
   (media [this]
@@ -25,7 +24,7 @@
    file on the local file system.
 
    `stream-routes` is a set of routes that conform to the
-   :clj-pseudostream.file.access.spec/stream-routes spec.
+   :clj-pseudostream.file.route/mapping spec.
 
   `media-sources` is a map of file extensions by keyword
   (i.e. `{:mp4 ...`) with values that are constructors for
