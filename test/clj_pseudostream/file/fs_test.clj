@@ -8,8 +8,7 @@
 
 (def segment "/")
 
-(def route-map {:fs-root (str (.getAbsolutePath (io/file "")) "/test/resources/")
-})
+(def route-map {:fs-root (str (.getAbsolutePath (io/file "")) "/test/resources/")})
 
 (deftest load-video-file
   (testing "missing file"

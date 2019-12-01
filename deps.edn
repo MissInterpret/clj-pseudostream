@@ -6,9 +6,9 @@
         }
  :aliases {:dev
            {:extra-paths ["dev"]
-            :extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}
+            :extra-deps {;com.bhauman/rebel-readline {:mvn/version "0.1.4"}
                          me.raynes/fs {:mvn/version "1.4.6"}}
-            :main-opts  ["-m" "rebel-readline.main"]
+;            :main-opts  ["-m" "rebel-readline.main"]
             }
            :test
            {:extra-paths ["test"]
