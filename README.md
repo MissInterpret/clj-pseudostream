@@ -1,5 +1,6 @@
 # clj-pseudostream
 
+TEST
 
 ## Usage
 
